@@ -17,7 +17,6 @@
 import React, { useState, useEffect } from "react";
 import { m, LazyMotion, domMax, AnimatePresence } from "framer-motion";
 import BookingModal from "./BookingModal";
-import CurrencySelector from "./CurrencySelector";
 import { ArrowUpRight, Check, X, ShieldCheck, Zap } from "lucide-react";
 import Link from "next/link";
 
@@ -31,7 +30,6 @@ export default function PricingClient({ projectTiers, perPagePrice, hourlyPrice 
   const [activeTiers, setActiveTiers] = useState(projectTiers);
   const [activePerPage, setActivePerPage] = useState(perPagePrice);
   const [activeHourly, setActiveHourly] = useState(hourlyPrice);
-  const [activeCountryCode, setActiveCountryCode] = useState("US");
   const [isLocalized, setIsLocalized] = useState(false);
 
   // ✅ FIX 3 — useEffect runs after all hooks are declared
@@ -40,9 +38,6 @@ export default function PricingClient({ projectTiers, perPagePrice, hourlyPrice 
       try {
         const res = await fetch("/api/get-pricing");
         const data = await res.json();
-
-        // Update CurrencySelector regardless (even if US, keeps it in sync with cookie)
-        setActiveCountryCode(data.countryCode);
 
         if (data.countryCode !== "US") {
           // ✅ FIX 2 — update STATE variables, which JSX reads below
@@ -94,16 +89,7 @@ export default function PricingClient({ projectTiers, perPagePrice, hourlyPrice 
             </p>
           </m.div>
 
-          {/* ✅ FIX 3 — CurrencySelector is HERE (inside PricingClient) so it
-              updates reactively when activeCountryCode changes after fetch */}
-          <m.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.4 }}
-            className="mobile-static flex justify-center mb-8"
-          >
-            <CurrencySelector currentCountryCode={activeCountryCode} />
-          </m.div>
+
 
           {/* Pricing Toggle */}
           <m.div
@@ -159,8 +145,8 @@ export default function PricingClient({ projectTiers, perPagePrice, hourlyPrice 
                         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
                           <span
                             className={`text-white text-xs font-bold uppercase tracking-wider py-1 px-4 rounded-full shadow-md whitespace-nowrap inline-block ${tier.id === "basic"
-                                ? "bg-slate-800"
-                                : "bg-gradient-to-r from-[var(--color-bigchill)] to-teal-500"
+                              ? "bg-slate-800"
+                              : "bg-gradient-to-r from-[var(--color-bigchill)] to-teal-500"
                               }`}
                           >
                             {tier.badge}
