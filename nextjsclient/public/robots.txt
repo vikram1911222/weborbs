@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://vooklu.com
+
+# Sitemaps
+Sitemap: https://vooklu.com/sitemap.xml
