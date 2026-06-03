@@ -55,6 +55,56 @@ export default function PricingClient({ projectTiers, perPagePrice, hourlyPrice 
     fetchLocalPricing();
   }, []);
 
+  useEffect(() => {
+    const fetchLocalPricing = async () => {
+      try {
+
+        // 1. Check localStorage first
+        const cached = localStorage.getItem("vuglo_pricing");
+        if (cached) {
+          const { data, savedAt, countryCode: cachedCode } = JSON.parse(cached);
+
+          const ageInHours = (Date.now() - savedAt) / (1000 * 60 * 60);
+
+          // Use cache if it's less than 24 hours old
+          if (ageInHours < 24) {
+            if (cachedCode !== "US") {
+              setActiveTiers(data.projectTiers);
+              setActivePerPage(data.perPagePrice);
+              setActiveHourly(data.hourlyPrice);
+              setIsLocalized(true);
+            }
+            return; // ← Stop here, no API call needed
+          }
+        }
+
+        // 2. No cache or expired — fetch fresh
+        const res = await fetch("/api/get-pricing");
+        const data = await res.json();
+
+        // 3. Save to localStorage for next visit
+        localStorage.setItem("vuglo_pricing", JSON.stringify({
+          data,
+          countryCode: data.countryCode,
+          savedAt: Date.now(),
+        }));
+
+        // 4. Update prices if not US
+        if (data.countryCode !== "US") {
+          setActiveTiers(data.projectTiers);
+          setActivePerPage(data.perPagePrice);
+          setActiveHourly(data.hourlyPrice);
+          setIsLocalized(true);
+        }
+
+      } catch (err) {
+        console.error("Pricing fetch failed:", err);
+      }
+    };
+
+    fetchLocalPricing();
+  }, []);
+
   return (
     <LazyMotion features={domMax} strict>
       <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-[var(--color-bigchill)] selection:text-white pb-24">

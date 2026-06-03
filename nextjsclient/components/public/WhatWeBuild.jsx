@@ -5,7 +5,7 @@ import { Check, ArrowRight } from "lucide-react";
 import Link from 'next/link';
 
 
-const cards = [
+const getCards = (basicPrice, intermediatePrice, enterprisePrice) => [
   {
     id: 1,
     badge: "Perfect For Starters",
@@ -18,7 +18,7 @@ const cards = [
       "SEO built in from day one",
       "Fast, mobile-first performance",
     ],
-    price: "₹7,899",
+    price: basicPrice,
     priceNote: "one-time",
     popular: false,
     accent: "#0ea5a4",
@@ -35,7 +35,7 @@ const cards = [
       "Full admin dashboard & controls",
       "Staff and history management",
     ],
-    price: "₹24,899",
+    price: intermediatePrice,
     priceNote: "one-time",
     popular: true,
     accent: "#2dd4bf",
@@ -52,7 +52,7 @@ const cards = [
       "Custom features built for your workflow",
       "Data ownership & customer analytics",
     ],
-    price: "₹40,000+",
+    price: enterprisePrice,
     priceNote: "scoped to your needs",
     popular: false,
     accent: "#5eead4",
@@ -195,6 +195,57 @@ function Card({ card, index }) {
 const WhatWeBuild = () => {
   const [headerRef, headerVisible] = useInView(0.2);
   const [noteRef, noteVisible] = useInView(0.2);
+
+  // Default to Indian pricing (your home market) — updates after fetch
+  const [cards, setCards] = useState(
+    getCards("₹7,899", "₹24,899", "₹40,000+")
+  );
+
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        // Check localStorage cache first (same cache as pricing page)
+        const cached = localStorage.getItem("vuglo_pricing");
+        if (cached) {
+          const { data, savedAt } = JSON.parse(cached);
+          const ageInHours = (Date.now() - savedAt) / (1000 * 60 * 60);
+          if (ageInHours < 24) {
+            const tiers = data.projectTiers;
+            setCards(getCards(
+              tiers[0].price,  // basic
+              tiers[1].price,  // intermediate
+              tiers[2].price   // enterprise
+            ));
+            return; // cache hit — no API call needed
+          }
+        }
+
+        // No cache or expired — fetch fresh
+        const res = await fetch("/api/get-pricing");
+        const data = await res.json();
+
+        // Save to localStorage so pricing page shares same cache
+        localStorage.setItem("vuglo_pricing", JSON.stringify({
+          data,
+          countryCode: data.countryCode,
+          savedAt: Date.now(),
+        }));
+
+        const tiers = data.projectTiers;
+        setCards(getCards(
+          tiers[0].price,  // basic
+          tiers[1].price,  // intermediate
+          tiers[2].price   // enterprise
+        ));
+
+      } catch (err) {
+        console.error("WhatWeBuild pricing fetch failed:", err);
+        // Silently fails — default Indian pricing stays showing
+      }
+    };
+
+    fetchPricing();
+  }, []);
 
   return (
     <section

@@ -27,6 +27,8 @@ export default function CurrencySelector({ currentCountryCode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ country: code }),
       });
+
+      localStorage.removeItem("vuglo_pricing");
       // Full page reload so the Server Component picks up the new cookie
       window.location.reload();
     });
@@ -91,11 +93,10 @@ export default function CurrencySelector({ currentCountryCode }) {
                     <li key={country.code}>
                       <button
                         onClick={() => handleSelect(country.code)}
-                        className={`w-full text-left px-3 py-2 flex items-center gap-2.5 text-sm transition-colors hover:bg-slate-50 ${
-                          country.code === currentCountryCode
-                            ? "text-[var(--color-bigchill)] font-semibold bg-[var(--color-bigchill)]/5"
-                            : "text-slate-700"
-                        }`}
+                        className={`w-full text-left px-3 py-2 flex items-center gap-2.5 text-sm transition-colors hover:bg-slate-50 ${country.code === currentCountryCode
+                          ? "text-[var(--color-bigchill)] font-semibold bg-[var(--color-bigchill)]/5"
+                          : "text-slate-700"
+                          }`}
                       >
                         <span className="text-base leading-none">{country.flag}</span>
                         <span className="flex-1">{country.name}</span>
